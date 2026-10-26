@@ -1,0 +1,233 @@
+{
+  "summary": {
+    "total_datasets": 4,
+    "total_records_trained_on": 4510,
+    "total_models_trained": 4,
+    "last_updated": "2026-10-26T11:38:38.409257"
+  },
+  "models": {
+    "phishing_detector": {
+      "model_id": "phishing_detector",
+      "model_name": "Phishing URL Detector",
+      "algorithm": "XGBoost Classifier",
+      "dataset_name": "UCI Phishing Websites Dataset Sample",
+      "dataset_source_link": "https://archive.ics.uci.edu/dataset/327/phishing+websites",
+      "num_records_trained": 960,
+      "num_records_tested": 240,
+      "total_records": 1200,
+      "num_features": 17,
+      "feature_names": [
+        "url_length",
+        "num_dots",
+        "num_hyphens",
+        "num_underscores",
+        "num_slashes",
+        "num_subdomains",
+        "has_at_symbol",
+        "is_https",
+        "has_ip",
+        "domain_has_hyphen",
+        "has_suspicious_keyword",
+        "suspicious_keyword_count",
+        "digit_ratio",
+        "special_char_ratio",
+        "entropy",
+        "query_length",
+        "path_length"
+      ],
+      "train_test_split": "80% Train / 20% Test (Stratified)",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "roc_auc": 1.0,
+      "confusion_matrix": [
+        [
+          120,
+          0
+        ],
+        [
+          0,
+          120
+        ]
+      ],
+      "trained_at": "2026-10-26T11:38:38.209336",
+      "is_retrained": false,
+      "retrained_samples_count": 0
+    },
+    "network_rf_detector": {
+      "model_id": "network_rf_detector",
+      "model_name": "Network Intrusion Classifier (Random Forest)",
+      "algorithm": "Random Forest Classifier",
+      "dataset_name": "NSL-KDD Benchmarking Dataset",
+      "dataset_source_link": "https://www.unb.ca/cic/datasets/nsl.html",
+      "num_records_trained": 1200,
+      "num_records_tested": 350,
+      "total_records": 1550,
+      "num_features": 36,
+      "feature_names": [
+        "duration",
+        "src_bytes",
+        "dst_bytes",
+        "count",
+        "srv_count",
+        "serror_rate",
+        "rerror_rate",
+        "same_srv_rate",
+        "diff_srv_rate",
+        "dst_host_count",
+        "dst_host_srv_count",
+        "dst_host_same_srv_rate",
+        "dst_host_diff_srv_rate",
+        "dst_host_serror_rate",
+        "num_failed_logins",
+        "logged_in",
+        "protocol_type_icmp",
+        "protocol_type_tcp",
+        "protocol_type_udp",
+        "service_auth",
+        "service_domain_u",
+        "service_eco_i",
+        "service_ecr_i",
+        "service_finger",
+        "service_ftp",
+        "service_http",
+        "service_ntp_u",
+        "service_other",
+        "service_private",
+        "service_smtp",
+        "service_telnet",
+        "flag_REJ",
+        "flag_RSTR",
+        "flag_S0",
+        "flag_SF",
+        "flag_SH"
+      ],
+      "train_test_split": "Official Split: Train (1200) / Test (350)",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "roc_auc": 1.0,
+      "confusion_matrix": [
+        [
+          151,
+          0
+        ],
+        [
+          0,
+          199
+        ]
+      ],
+      "trained_at": "2026-10-26T11:38:38.277683",
+      "is_retrained": false,
+      "retrained_samples_count": 0
+    },
+    "network_anomaly_detector": {
+      "model_id": "network_anomaly_detector",
+      "model_name": "Zero-Day Network Anomaly Detector (Isolation Forest)",
+      "algorithm": "Isolation Forest (Unsupervised)",
+      "dataset_name": "UNSW-NB15 & NSL-KDD Baseline Network Flows",
+      "dataset_source_link": "https://research.unsw.edu.au/projects/unsw-nb15-dataset",
+      "num_records_trained": 550,
+      "num_records_tested": 350,
+      "total_records": 1550,
+      "num_features": 36,
+      "feature_names": [
+        "duration",
+        "src_bytes",
+        "dst_bytes",
+        "count",
+        "srv_count",
+        "serror_rate",
+        "rerror_rate",
+        "same_srv_rate",
+        "diff_srv_rate",
+        "dst_host_count",
+        "dst_host_srv_count",
+        "dst_host_same_srv_rate",
+        "dst_host_diff_srv_rate",
+        "dst_host_serror_rate",
+        "num_failed_logins",
+        "logged_in",
+        "protocol_type_icmp",
+        "protocol_type_tcp",
+        "protocol_type_udp",
+        "service_auth",
+        "service_domain_u",
+        "service_eco_i",
+        "service_ecr_i",
+        "service_finger",
+        "service_ftp",
+        "service_http",
+        "service_ntp_u",
+        "service_other",
+        "service_private",
+        "service_smtp",
+        "service_telnet",
+        "flag_REJ",
+        "flag_RSTR",
+        "flag_S0",
+        "flag_SF",
+        "flag_SH"
+      ],
+      "train_test_split": "Normal Baseline Filter: 550 Train / 350 Test",
+      "accuracy": 0.9086,
+      "precision": 0.8615,
+      "recall": 1.0,
+      "f1_score": 0.9256,
+      "roc_auc": null,
+      "confusion_matrix": [
+        [
+          119,
+          32
+        ],
+        [
+          0,
+          199
+        ]
+      ],
+      "trained_at": "2026-10-26T11:38:38.332332",
+      "is_retrained": false
+    },
+    "login_anomaly_detector": {
+      "model_id": "login_anomaly_detector",
+      "model_name": "UEBA Login Anomaly Detector (Isolation Forest)",
+      "algorithm": "Isolation Forest (Unsupervised Anomaly Detection)",
+      "dataset_name": "Synthetic Corporate Login Logs (Seeded Random UEBA Profile)",
+      "dataset_source_link": "Generated defensively via Seeded Random Generator (Tagged SYNTHETIC)",
+      "num_records_trained": 1800,
+      "num_records_tested": 400,
+      "total_records": 1950,
+      "num_features": 7,
+      "feature_names": [
+        "hour_of_day",
+        "is_off_hours",
+        "is_weekend",
+        "failed_attempts",
+        "is_foreign_country",
+        "is_untrusted_device",
+        "burst_failure_flag"
+      ],
+      "train_test_split": "Unsupervised Baseline Split: 1800 Normal Train / 400 Test",
+      "accuracy": 0.9125,
+      "precision": 0.4444,
+      "recall": 0.8276,
+      "f1_score": 0.5783,
+      "roc_auc": null,
+      "confusion_matrix": [
+        [
+          341,
+          30
+        ],
+        [
+          5,
+          24
+        ]
+      ],
+      "trained_at": "2026-10-26T11:38:38.409187",
+      "is_retrained": false,
+      "retrained_samples_count": 0
+    }
+  }
+}
