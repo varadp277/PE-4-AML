@@ -218,7 +218,53 @@ All 13 unit tests pass:
 
 ---
 
-## 9. Limitations & Data Provenance Disclosure
+## 10. Deployment Architecture & Cloud Setup
+
+AegisAI supports two primary deployment topologies:
+
+### Layout (A): Unified Vercel Deployment (Recommended & Implemented)
+Both the **Vite + React frontend** and the **FastAPI Python backend** run on Vercel under a shared domain using **Vercel Services**:
+- **Bundle Size Optimization**: Dev dependencies (`pytest`, `httpx`, `matplotlib`, `seaborn`) are separated from production dependencies. The total uncompressed serverless bundle is ~250 MB, well under Vercel's **500 MB** function size limit.
+- **Unified Routing**: Requests to `/api/*` and direct backend endpoints (`/predict/*`, `/alerts/*`, `/dashboard/*`, `/models/*`, `/retrain/*`, `/docs`) route to FastAPI. All other routes `/(.*)` route to the Vite SPA with full refresh support.
+- **Serverless-Safe Storage**: SQLite automatically uses `/tmp/threat_intel.db` when running on Vercel (`VERCEL=1`), or PostgreSQL when `DATABASE_URL` is set.
+- **4.5 MB Payload Protection**: Both the frontend file selector and the FastAPI `/predict/network` route validate and reject CSV uploads exceeding Vercel's 4.5 MB serverless payload limit with friendly HTTP 413 error messages.
+- **Safe Model Retraining**: On serverless functions, retraining fails gracefully with a descriptive error informing users that retraining runs locally or on persistent containers.
+
+#### Required Environment Variables for Vercel (Layout A)
+| Variable | Value / Description | Required? |
+|---|---|---|
+| `DATABASE_URL` | Optional. If unset, automatically defaults to `sqlite:////tmp/threat_intel.db`. To persist across cold starts, supply a managed Postgres connection string (e.g. Neon, Supabase, Render). | Optional |
+| `CORS_ORIGINS` | Optional. e.g. `https://your-app.vercel.app` (defaults to permissive in dev). | Optional |
+| `ENVIRONMENT` | `production` | Optional |
+
+#### Exact Deployment Steps for Vercel:
+1. Push project code to GitHub/GitLab.
+2. In the Vercel Dashboard, import the repository.
+3. Vercel automatically detects `vercel.json` and creates two services: `app` (FastAPI at root `.`) and `frontend` (Vite in `frontend/`).
+4. (Optional) Set `DATABASE_URL` if using external PostgreSQL.
+5. Click **Deploy**.
+6. Or deploy from CLI:
+   ```bash
+   npx vercel --prod
+   ```
+
+---
+
+### Layout (B): Split Deployment (Vercel Frontend + Render Backend)
+If you prefer persistent disk storage for SQLite or want in-cloud model retraining without serverless function limits:
+1. **Deploy Backend to Render**:
+   - Create a **Web Service** pointing to the repository.
+   - Build Command: `pip install -r requirements.txt` (or `uv pip install -r requirements.txt`)
+   - Start Command: `uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT`
+   - Set environment variable `CORS_ORIGINS=https://your-frontend.vercel.app`
+2. **Deploy Frontend to Vercel**:
+   - Set Root Directory: `frontend`
+   - Set Environment Variable: `VITE_API_URL=https://your-backend.onrender.com`
+   - Deploy.
+
+---
+
+## 11. Limitations & Data Provenance Disclosure
 
 In compliance with academic case study guidelines:
 
@@ -232,7 +278,8 @@ In compliance with academic case study guidelines:
 
 ---
 
-## 10. Educational Disclaimer
+## 12. Educational Disclaimer
 
 > **DISCLAIMER:**  
 > This software is created strictly for academic research, education, and college case study presentations. It is intended to showcase automated detection methodologies and explainable AI in defensive cybersecurity. Do not deploy this software as the sole security control in a production environment.
+

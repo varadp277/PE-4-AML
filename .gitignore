@@ -1,14 +1,40 @@
-.env
-.env.*
-!.env.example
-.venv/
-node_modules/
+# Python bytecode and caches
 __pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
-*.pyc
+.venv/
+*.egg-info/
+
+# Node and frontend build artifacts
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Vercel deployment cache
+.vercel/
+
+# Databases
 *.db
 *.sqlite
 *.sqlite3
+
+# Environment variable files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# Never ignore environment examples
+!.env.example
+!frontend/.env.example
+
+# OS artifacts
 .DS_Store
-frontend/dist/
-frontend/build/
+Thumbs.db
+
+# Ensure saved ML models, metadata, and plots are explicitly tracked
+!backend/models_saved/*.joblib
+!backend/models_saved/metadata.json
+!backend/models_saved/plots/*.png

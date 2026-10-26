@@ -3,7 +3,7 @@
     "total_datasets": 4,
     "total_records_trained_on": 4510,
     "total_models_trained": 4,
-    "last_updated": "2026-10-26T11:38:38.409257"
+    "last_updated": "2026-10-26T22:22:04.524184"
   },
   "models": {
     "phishing_detector": {
@@ -51,7 +51,7 @@
           120
         ]
       ],
-      "trained_at": "2026-10-26T11:38:38.209336",
+      "trained_at": "2026-10-26T22:22:04.524113",
       "is_retrained": false,
       "retrained_samples_count": 0
     },

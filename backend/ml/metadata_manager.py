@@ -4,14 +4,20 @@ Zero hardcoding: all counts, metrics, and timestamps are computed dynamically fr
 """
 
 import json
+import logging
 import os
 from datetime import datetime
 from typing import Any, Dict
 
+logger = logging.getLogger("ai_threat.metadata_manager")
+
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models_saved")
 METADATA_FILE = os.path.join(MODELS_DIR, "metadata.json")
 
-os.makedirs(MODELS_DIR, exist_ok=True)
+try:
+    os.makedirs(MODELS_DIR, exist_ok=True)
+except OSError:
+    pass
 
 
 def load_metadata() -> Dict[str, Any]:
@@ -20,8 +26,8 @@ def load_metadata() -> Dict[str, Any]:
         try:
             with open(METADATA_FILE, "r") as f:
                 return json.load(f)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning(f"Failed to read metadata.json: {exc}")
 
     return {
         "summary": {
@@ -37,6 +43,7 @@ def load_metadata() -> Dict[str, Any]:
 def save_model_metadata(model_id: str, model_info: Dict[str, Any]) -> Dict[str, Any]:
     """
     Save or update metadata for a specific trained model, recalculating all global totals.
+    Safe against read-only filesystems.
     """
     meta = load_metadata()
     meta["models"][model_id] = model_info
@@ -58,7 +65,10 @@ def save_model_metadata(model_id: str, model_info: Dict[str, Any]) -> Dict[str, 
         "last_updated": datetime.now().isoformat()
     }
 
-    with open(METADATA_FILE, "w") as f:
-        json.dump(meta, f, indent=2)
+    try:
+        with open(METADATA_FILE, "w") as f:
+            json.dump(meta, f, indent=2)
+    except OSError as exc:
+        logger.warning(f"Could not persist metadata file (read-only filesystem): {exc}")
 
     return meta

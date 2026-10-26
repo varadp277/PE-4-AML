@@ -85,13 +85,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               <Activity className="w-3.5 h-3.5 text-cyber-teal animate-pulse" />
               API Status
             </span>
-            <span className="font-mono text-emerald-400 font-semibold text-[11px]">ONLINE :8000</span>
+            <span className="font-mono text-emerald-400 font-semibold text-[11px]">ONLINE</span>
           </div>
           <div className="text-[11px] text-slate-400 font-mono truncate">
             FastAPI + Scikit-Learn 1.9+
           </div>
           <div className="pt-1 border-t border-cyber-border/60 flex items-center justify-between text-[10px] text-slate-400">
-            <span>Env: Local Bench</span>
+            <span>Env: {import.meta.env.DEV ? 'Local Dev' : 'Cloud / Vercel'}</span>
             <span className="text-cyber-cyan font-mono">v1.0.0</span>
           </div>
         </div>

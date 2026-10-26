@@ -143,3 +143,42 @@ def test_retraining_endpoint():
     data = res.json()
     assert data["status"] == "SUCCESS"
     assert "modules_updated" in data
+
+
+def test_api_prefix_routing():
+    # Verify dual routing under /api works identically
+    res_root = client.get("/api")
+    assert res_root.status_code == 200
+    assert "AI-Based Threat Intelligence Platform" in res_root.json()["platform"]
+
+    res_url = client.post("/api/predict/url", json={"url": "https://google.com"})
+    assert res_url.status_code == 200
+    assert res_url.json()["verdict"] in ["Safe", "Suspicious", "Phishing"]
+
+
+def test_network_upload_size_limit():
+    # Simulate a file exceeding 4.5 MB
+    large_payload = b"col1,col2\n" + (b"0,1\n" * 2500000) # > 5 MB
+    res = client.post(
+        "/predict/network",
+        files={"file": ("large_sample.csv", large_payload, "text/csv")}
+    )
+    assert res.status_code == 413
+    assert "4.5 MB" in res.json()["detail"]
+
+
+def test_network_upload_empty_csv():
+    # Simulate an empty CSV file
+    res = client.post(
+        "/predict/network",
+        files={"file": ("empty.csv", b"", "text/csv")}
+    )
+    assert res.status_code == 400
+
+
+def test_serverless_retrain_graceful_failure(monkeypatch):
+    monkeypatch.setenv("VERCEL", "1")
+    res = client.post("/retrain", json={"module": "all"})
+    assert res.status_code == 400
+    assert "disabled on Vercel serverless" in res.json()["detail"]
+

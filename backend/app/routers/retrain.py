@@ -5,10 +5,11 @@ demonstrating adaptive threat intelligence feedback loops.
 """
 
 import json
+import os
 from datetime import datetime
 from typing import Any, Dict, Optional
 import pandas as pd
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -36,6 +37,20 @@ def trigger_retraining(
     payload: Optional[RetrainRequest] = None,
     db: Session = Depends(get_db)
 ):
+    # On serverless platforms (e.g. Vercel), filesystems are ephemeral/read-only
+    # and long ML training loops exceed serverless execution timeouts.
+    is_serverless = os.getenv("VERCEL") == "1" or bool(os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+    if is_serverless:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Model retraining is disabled on Vercel serverless functions (read-only "
+                "filesystem and execution timeout limits). To retrain models with analyst "
+                "feedback, run the project locally ('npm run dev') or host the backend "
+                "on a persistent container environment (e.g. Render / Docker)."
+            )
+        )
+
     target_module = (payload.module if payload else "all").lower()
     meta_before = load_metadata()
 

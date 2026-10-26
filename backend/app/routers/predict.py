@@ -170,13 +170,37 @@ async def scan_network(
             os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
             "data", "raw", "nsl_kdd_sample_test.csv"
         )
-        df = pd.read_csv(sample_path).head(40)
+        if os.path.exists(sample_path) and os.path.getsize(sample_path) > 0:
+            df = pd.read_csv(sample_path).head(40)
+        else:
+            # Fallback demonstration rows if raw data folder is empty or absent
+            fallback_rows = [
+                {
+                    "duration": 0, "protocol_type": "tcp", "service": "http", "flag": "SF",
+                    "src_bytes": 181, "dst_bytes": 5450, "count": 8, "srv_count": 8,
+                    "serror_rate": 0.0, "rerror_rate": 0.0, "same_srv_rate": 1.0,
+                    "diff_srv_rate": 0.0, "dst_host_count": 9, "dst_host_srv_count": 9,
+                    "dst_host_same_srv_rate": 1.0, "dst_host_diff_srv_rate": 0.0,
+                    "dst_host_serror_rate": 0.0, "num_failed_logins": 0, "logged_in": 1
+                }
+            ] * 20
+            df = pd.DataFrame(fallback_rows)
     else:
+        MAX_UPLOAD_SIZE = int(4.5 * 1024 * 1024) # 4.5 MB serverless payload limit
         content = await file.read()
+        if len(content) > MAX_UPLOAD_SIZE:
+            size_mb = round(len(content) / (1024 * 1024), 2)
+            raise HTTPException(
+                status_code=413,
+                detail=f"Uploaded CSV ({size_mb} MB) exceeds the 4.5 MB serverless upload limit. Please upload a smaller file under 4.5 MB."
+            )
         try:
             df = pd.read_csv(io.BytesIO(content))
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {str(e)}")
+
+        if df.empty:
+            raise HTTPException(status_code=400, detail="Uploaded CSV file is empty. Please provide network telemetry records.")
 
     # Ensure required columns are present with sensible defaults
     for col in categorical_cols:

@@ -4,6 +4,7 @@ Defensive cybersecurity case study and automated threat detection system.
 """
 
 import json
+import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -11,18 +12,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.app.database import Base, SessionLocal, engine
+from backend.app.database import Base, SessionLocal, engine, init_db
 from backend.app.models.alert import Alert, ScanRecord
 from backend.app.routers import alerts, dashboard, models_info, predict, retrain
 
-# Ensure database tables exist
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger("ai_threat.main")
 
 
 def seed_initial_demo_alerts():
     """Seed a few realistic historical alerts so dashboard charts display rich data immediately."""
-    db = SessionLocal()
+    db = None
     try:
+        db = SessionLocal()
         count = db.query(Alert).count()
         if count == 0:
             now = datetime.utcnow()
@@ -123,13 +124,19 @@ def seed_initial_demo_alerts():
                     risk_score=a.risk_score
                 ))
             db.commit()
+    except Exception as exc:
+        if db:
+            db.rollback()
+        logger.warning(f"Could not seed initial demo alerts (non-fatal): {exc}")
     finally:
-        db.close()
+        if db:
+            db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup: ensure tables exist safely & seed demo data
+    init_db()
     seed_initial_demo_alerts()
     yield
     # Shutdown
@@ -142,31 +149,47 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS configuration
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000").split(",")
+# CORS configuration from environment variable
+cors_env = os.getenv("CORS_ORIGINS", "")
+if cors_env.strip():
+    configured_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+else:
+    configured_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+
+# If CORS_ORIGINS contains "*" or we are in development, allow all origins
+allow_all_origins = "*" in configured_origins or os.getenv("ENVIRONMENT", "development").lower() == "development"
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins + ["*"], # Permissive for local testing
+    allow_origins=["*"] if allow_all_origins else configured_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount Routers
-app.include_router(predict.router)
-app.include_router(alerts.router)
-app.include_router(dashboard.router)
-app.include_router(models_info.router)
-app.include_router(retrain.router)
+# Mount Routers under both root ("") and standard ("/api") prefixes
+for prefix in ["", "/api"]:
+    app.include_router(predict.router, prefix=prefix)
+    app.include_router(alerts.router, prefix=prefix)
+    app.include_router(dashboard.router, prefix=prefix)
+    app.include_router(models_info.router, prefix=prefix)
+    app.include_router(retrain.router, prefix=prefix)
 
 # Mount static plots directory for viewing confusion matrices & ROC curves directly
 plots_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models_saved", "plots")
 if os.path.exists(plots_dir):
     app.mount("/static/plots", StaticFiles(directory=plots_dir), name="plots")
+    app.mount("/api/static/plots", StaticFiles(directory=plots_dir), name="api_plots")
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/api/")
 def root():
     return {
         "platform": "AI-Based Threat Intelligence Platform",

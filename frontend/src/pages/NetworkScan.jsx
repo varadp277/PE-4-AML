@@ -58,6 +58,12 @@ export default function NetworkScan() {
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) {
+      const maxBytes = 4.5 * 1024 * 1024;
+      if (selected.size > maxBytes) {
+        const sizeMb = (selected.size / (1024 * 1024)).toFixed(1);
+        setError(`Selected file (${sizeMb} MB) exceeds the 4.5 MB serverless limit. Please choose a CSV file smaller than 4.5 MB.`);
+        return;
+      }
       setFile(selected);
       handleScan(selected);
     }
